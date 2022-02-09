@@ -40,7 +40,13 @@ class QuRandom:
 
         print(f"Current queue size {self.my_q.qsize()}")
 
-
+    # Returns a random true or false
+    def get_bool(self):
+        if self.my_q.get() == 1:
+            return True
+        else:
+            return False
+    
     # Returns an integer such that i is in range [start, stop] 
     # and (i-start)%increment == 0
     def get_int(self, start=0, stop=100):
@@ -63,8 +69,7 @@ class QuRandom:
         # Return our random integer
         return decimal_num
         
-        
-
+    # Returns a random string of a determined length. Can include all ascii characters or a restricted set
     def get_string(self):
 
         # If this call has reduced the size of our queue to more than half, add more elements
@@ -75,5 +80,11 @@ if __name__ == "__main__":
     
     Q = QuRandom()
 
+    true_counter = 0
+    false_counter = 1
+
     for i in range(1000):
-        print(Q.get_int())
+        if Q.get_bool():
+            true_counter+=1
+        else:
+            false_counter+=1
