@@ -1,5 +1,8 @@
 from queue import Queue
 from random import randrange as rand_int
+from unicodedata import decimal
+from bitarray import bitarray
+from bitarray import util
 
 from numpy import get_include
 
@@ -27,22 +30,50 @@ class QuRandom:
             # data. Eventually, we will hook up the IBM quantum systems
             self.my_q.put(rand_int(0,2))
 
+    # Adds more random ints to our queue, needs to be private
+    def __get_more_bits(self):
+
+        print(f"Current queue size {self.my_q.qsize()}")
+        print("Adding to the queue")
+        for i in range(20000):
+            self.my_q.put(rand_int(0,2))
+
+        print(f"Current queue size {self.my_q.qsize()}")
+
+
     # Returns an integer such that i is in range [start, stop] 
     # and (i-start)%increment == 0
-    def get_int(self, start=0, stop=100, increment=1):
+    def get_int(self, start=0, stop=100):
+        
+        # Pull 32 bits from the queue to create a random 32-bit number
+        binary_num = bitarray()
+        for i in range(32):
+            binary_num.append(self.my_q.get())
 
-        # Construct a 32 bit number
+        # Convert base 2 to base 10
+        decimal_num = util.ba2int(binary_num)
 
-        # Convert to int
+        # Convert from [0, 2^32-1] to [start, stop] and round it off to the nearest int
+        decimal_num = round(( (decimal_num) / (2**32-1) ) * (stop - start) + start)
 
-        # Convert from [0, 2^32-1] to [start, stop]
-        pass
+        # If this call has reduced the size of our queue to more than half, add more elements
+        if self.my_q.qsize() <= 10000:
+            self.__get_more_bits()
+        
+        # Return our random integer
+        return decimal_num
+        
+        
 
     def get_string(self):
-        pass
+
+        # If this call has reduced the size of our queue to more than half, add more elements
+        if self.my_q.qsize() <= 10000:
+            self.__get_more_bits()
 
 if __name__ == "__main__":
     
     Q = QuRandom()
 
-    Q.get_int()
+    for i in range(1000):
+        print(Q.get_int())
