@@ -1,10 +1,10 @@
 from queue import Queue                     # Used to store our random numbers
 from random import randrange as rand_int
-from unicodedata import decimal    # Substitute for truely random numbers
+from unicodedata import decimal             # Substitute for truely random numbers
 from bitarray import bitarray               # Used for handling bitstrings
 from bitarray import util                   # Used for handling bitstrings
-from math import log2                       # For get_int()
-from math import ceil                       # For get_int()
+from math import log2, ceil                 # For get_int()
+import time                                 # For measuring q computer response time
 
 # This class seeks to make calls to ibm's quantum 
 # computers to generate a bunch of truely random bits. 
@@ -34,11 +34,14 @@ class QuRandom:
     def __get_more_bits(self):
 
         print(f"Current queue size {self.my_q.qsize()}")
-        print("Adding to the queue")
+        print("Adding to the queue...")
+        before = time.time()
         for i in range(20000):
             self.my_q.put(rand_int(0,2))
 
-        print(f"Current queue size {self.my_q.qsize()}")
+        duration = time.time() - before
+        print(f"Got 20,000 bits in {duration} seconds")
+        print(f"Current queue size: {self.my_q.qsize()}")
 
     # Returns a random true or false
     def get_bool(self):
