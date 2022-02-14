@@ -1,5 +1,6 @@
 from queue import Queue                     # Used to store our random numbers
-from random import randrange as rand_int    # Substitute for truely random numbers
+from random import randrange as rand_int
+from unicodedata import decimal    # Substitute for truely random numbers
 from bitarray import bitarray               # Used for handling bitstrings
 from bitarray import util                   # Used for handling bitstrings
 from math import log2                       # For get_int()
@@ -66,14 +67,14 @@ class QuRandom:
 
         # Pull 2**power bits from the queue to create a random n-bit number
         binary_num = bitarray()
-        for i in range(2**power):
+        for i in range(power):
             binary_num.append(self.my_q.get())
 
         # Convert base 2 to base 10
         decimal_num = util.ba2int(binary_num)
 
         # Convert from [0, 2^32-1] to [start, stop] and round it off to the nearest int
-        decimal_num = round(( (decimal_num) / (2**32-1) ) * (stop - start) + start)
+        decimal_num = round(( (decimal_num) / (2**power-1) ) * (stop - start) + start)
 
         # If this call has reduced the size of our queue to more than half, add more elements
         if self.my_q.qsize() <= 10000:
@@ -85,6 +86,7 @@ class QuRandom:
     # Returns a random string of a determined length.
     def get_string(self, length):
 
+        # Ascii codes
         ascii_dict = {
             util.ba2int(bitarray('0100001')) : "!",
             util.ba2int(bitarray('0100010')) : "\"",
@@ -210,8 +212,4 @@ if __name__ == "__main__":
     
     Q = QuRandom()
 
-    true_counter = 0
-    false_counter = 1
-
-    for i in range(100):
-        print(Q.get_string(5))
+    print(Q.get_int())
