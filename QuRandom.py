@@ -84,7 +84,7 @@ class QuRandom:
         return decimal_num
         
     # Returns a random string of a determined length.
-    def get_string(self, length):
+    def get_string(self, length=10):
 
         # Ascii codes
         ascii_dict = {
