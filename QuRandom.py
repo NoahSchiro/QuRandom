@@ -1,3 +1,7 @@
+import qiskit as quk                        # Library for intefacing with quantum computers
+from dotenv import load_dotenv              # Handles .env files for my IBMQ account
+import os
+load_dotenv()
 from queue import Queue                     # Used to store our random numbers
 from random import randrange as rand_int
 from unicodedata import decimal             # Substitute for truely random numbers
@@ -213,6 +217,8 @@ class QuRandom:
 
 if __name__ == "__main__":
     
-    Q = QuRandom()
+    # Q = QuRandom()
 
-    print(Q.get_int())
+    # print(Q.get_int())
+    
+    provider = quk.IBMQ.load_account(os.environ.get("IBMQ_ACCOUNT_TOKEN"))
