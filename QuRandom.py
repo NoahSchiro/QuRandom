@@ -1,10 +1,9 @@
 import qiskit as quk                        # Library for intefacing with quantum computers
 from dotenv import load_dotenv              # Handles .env files for my IBMQ account
-import os
-load_dotenv()
+import os                                   # Handles .env files for my IBMQ account
+load_dotenv()                               # Handles .env files for my IBMQ account
+from threading import Thread                # Concurrency used when sending jobs to IBMQ
 from queue import Queue                     # Used to store our random numbers
-from random import randrange as rand_int
-from unicodedata import decimal             # Substitute for truely random numbers
 from bitarray import bitarray               # Used for handling bitstrings
 from bitarray import util                   # Used for handling bitstrings
 from math import log2, ceil                 # For get_int()
@@ -53,7 +52,7 @@ class QuRandom:
 
         #TODO: Come back and change the backend to our_backend
         our_backend = self.ibmq.get_backend(str("ibmq_qasm_simulator"))
-        print(f"Connecting to {our_backend}")
+        print(f"Connected to {our_backend}")
 
         # Next we are going to build our quantum circuit (contains 1 qubit and 1 classical bit)
         circuit = quk.QuantumCircuit(1,1)
@@ -80,7 +79,7 @@ class QuRandom:
         
         # Move the resulting array into the queue
         for bit in result:
-            self.my_q.put(bit)
+            self.my_q.put(int(bit))
 
         # End time tracking
         duration = time.time() - before
@@ -94,10 +93,17 @@ class QuRandom:
         print("IBMQ account successfully loaded")
 
         # Make a call to the quantum computer
+        # We do NOT want to thread this call 
+        # because we need to ensure that the 
+        # queue has elements
         self.__get_quantum_bits()
 
     # Returns a random true or false
     def get_bool(self):
+        
+        # Wait to make sure the queue has elements
+        while self.my_q.qsize() == 0:
+            time.sleep(1)
         
         if self.my_q.get() == 1:
 
@@ -110,13 +116,20 @@ class QuRandom:
 
             # If this call has reduced the size of our queue to more than half, add more elements
             if self.my_q.qsize() <= 10000:
-                self.__get_quantum_bits()
+
+                # Put this call on a seperate thread 
+                # so we don't have to wait
+                Thread(target=self.__get_quantum_bits).start()
 
             return False      
     
     # Returns an integer such that i is in range [start, stop] 
     # and (i-start)%increment == 0
     def get_int(self, start=0, stop=100):
+
+        # Wait to make sure the queue has elements
+        while self.my_q.qsize() == 0:
+            time.sleep(1)
 
         # Figure out the smallest power of two greater than the range
         power = ceil(log2(stop-start))
@@ -134,13 +147,20 @@ class QuRandom:
 
         # If this call has reduced the size of our queue to more than half, add more elements
         if self.my_q.qsize() <= 10000:
-            self.__get_quantum_bits()
+            
+            # Put this call on a seperate thread 
+                # so we don't have to wait
+                Thread(target=self.__get_quantum_bits).start()
         
         # Return our random integer
         return decimal_num
         
     # Returns a random string of a determined length.
     def get_string(self, length=10):
+
+        # Wait to make sure the queue has elements
+        while self.my_q.qsize() == 0:
+            time.sleep(1)
 
         # Ascii codes
         ascii_dict = {
@@ -260,7 +280,10 @@ class QuRandom:
         
         # If this call has reduced the size of our queue to more than half, add more elements
         if self.my_q.qsize() <= 10000:
-            self.__get_quantum_bits()
+            
+            # Put this call on a seperate thread 
+            # so we don't have to wait
+            Thread(target=self.__get_quantum_bits).start()
         
         return response
 
@@ -268,6 +291,6 @@ if __name__ == "__main__":
     
     Q = QuRandom()
 
-    # print(Q.get_int())
-    
-    
+    print(f"Fetching a random boolean: {Q.get_bool()}")
+    print(f"Fetching a random integer: {Q.get_int()}")
+    print(f"Fetching a random string: {Q.get_string(1000)}")
