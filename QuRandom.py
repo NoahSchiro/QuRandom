@@ -23,29 +23,78 @@ import time                                 # For measuring q computer response 
 
 class QuRandom:
 
+    # My account 
+    ibmq = None
+
+    # The queue that stores the bits
     my_q = Queue()
 
-    def __init__(self):
-
-        # If queue is empty, we need to populate it
-        for i in range(20000):
-
-            # For now, we are just going to use pseudo-random 
-            # data. Eventually, we will hook up the IBM quantum systems
-            self.my_q.put(rand_int(0,2))
-
-    # Adds more random ints to our queue, needs to be private
-    def __get_more_bits(self):
+    def __get_quantum_bits(self):
 
         print(f"Current queue size {self.my_q.qsize()}")
         print("Adding to the queue...")
+        # Let's track how long this
         before = time.time()
-        for i in range(20000):
-            self.my_q.put(rand_int(0,2))
 
+        # Fetch the list of q computers available. Available will include 
+        # simulators whereas available computers will only contain real q computers
+        available = self.ibmq.backends()
+        available_computers = []
+        for computer in available:
+            try:
+                # Essentially this for loop filters out computers without qubits
+                computer.properties().qubits
+                available_computers.append(computer)
+            except:
+                pass
+        
+        # Next, fetch the least busy computer
+        our_backend = quk.providers.ibmq.least_busy(available_computers)
+
+        #TODO: Come back and change the backend to our_backend
+        our_backend = self.ibmq.get_backend(str("ibmq_qasm_simulator"))
+        print(f"Connecting to {our_backend}")
+
+        # Next we are going to build our quantum circuit (contains 1 qubit and 1 classical bit)
+        circuit = quk.QuantumCircuit(1,1)
+        
+        # The ground state of a qubit is 0, but we will apply a hadamard gate which will put 
+        # the qubit in a superposition with a 50/50 shot of being 0 or 1
+        circuit.h(0)
+
+        # Collapse the superposition through measurement
+        circuit.measure([0], [0])
+
+        # Circuit is now built
+        circuits = []
+        circuits.append(circuit)
+        print("Circuit built")
+
+        # Executing the circuit on the backend with 20,000 shots
+        job_manager = quk.providers.ibmq.managed.IBMQJobManager()
+        job = job_manager.run(circuits, backend=our_backend, shots=20000, memory=True)
+        print("Running...")
+
+        # Get the result
+        result = job.results().get_memory(circuit)
+        
+        # Move the resulting array into the queue
+        for bit in result:
+            self.my_q.put(bit)
+
+        # End time tracking
         duration = time.time() - before
         print(f"Got 20,000 bits in {duration} seconds")
         print(f"Current queue size: {self.my_q.qsize()}")
+
+    def __init__(self):
+        
+        # Load in my IBMQ account via .env variables
+        self.ibmq = quk.IBMQ.enable_account(os.environ.get("IBMQ_ACCOUNT_TOKEN"))
+        print("IBMQ account successfully loaded")
+
+        # Make a call to the quantum computer
+        self.__get_quantum_bits()
 
     # Returns a random true or false
     def get_bool(self):
@@ -54,14 +103,14 @@ class QuRandom:
 
             # If this call has reduced the size of our queue to more than half, add more elements
             if self.my_q.qsize() <= 10000:
-                self.__get_more_bits()
+                self.__get_quantum_bits()
 
             return True
         else:
 
             # If this call has reduced the size of our queue to more than half, add more elements
             if self.my_q.qsize() <= 10000:
-                self.__get_more_bits()
+                self.__get_quantum_bits()
 
             return False      
     
@@ -85,7 +134,7 @@ class QuRandom:
 
         # If this call has reduced the size of our queue to more than half, add more elements
         if self.my_q.qsize() <= 10000:
-            self.__get_more_bits()
+            self.__get_quantum_bits()
         
         # Return our random integer
         return decimal_num
@@ -211,14 +260,14 @@ class QuRandom:
         
         # If this call has reduced the size of our queue to more than half, add more elements
         if self.my_q.qsize() <= 10000:
-            self.__get_more_bits()
+            self.__get_quantum_bits()
         
         return response
 
 if __name__ == "__main__":
     
-    # Q = QuRandom()
+    Q = QuRandom()
 
     # print(Q.get_int())
     
-    provider = quk.IBMQ.load_account(os.environ.get("IBMQ_ACCOUNT_TOKEN"))
+    
