@@ -51,7 +51,7 @@ class QuRandom:
         our_backend = quk.providers.ibmq.least_busy(available_computers)
 
         #TODO: Come back and change the backend to our_backend
-        our_backend = self.ibmq.get_backend(str("ibmq_qasm_simulator"))
+        our_backend = self.ibmq.get_backend(str(our_backend))
         print(f"Connected to {our_backend}")
 
         # Next we are going to build our quantum circuit (contains 1 qubit and 1 classical bit)
@@ -63,6 +63,7 @@ class QuRandom:
 
         # Collapse the superposition through measurement
         circuit.measure([0], [0])
+        circuit = quk.transpile(circuit, our_backend)
 
         # Circuit is now built
         circuits = []
