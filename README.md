@@ -26,7 +26,7 @@ All API calls will return a JSON data structure with some relevant meta-data and
 Returns true or false
 
 ```
-<url>/rand_int/?<start>&<stop>
+<url>/rand_int/<start>/<stop>
 ```
 Returns a random integer between the range `<start>` and `<stop>` which is provided by the user. These values must be integers and if they are left blank, the function will default to start=0 and stop=100
 

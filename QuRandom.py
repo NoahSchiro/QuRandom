@@ -293,4 +293,4 @@ if __name__ == "__main__":
 
     print(f"Fetching a random boolean: {Q.get_bool()}")
     print(f"Fetching a random integer: {Q.get_int()}")
-    print(f"Fetching a random string: {Q.get_string(1000)}")
+    print(f"Fetching a random string: {Q.get_string()}")
